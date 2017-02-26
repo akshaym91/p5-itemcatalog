@@ -1,4 +1,4 @@
-# My Show Book
+# Decath
 Udacity Fullstack Web Developer Project 5: A Movie items catalog
 
 This project is built with Python backend with:
