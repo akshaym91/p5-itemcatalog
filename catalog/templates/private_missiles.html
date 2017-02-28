@@ -1,0 +1,37 @@
+{% extends "main.html" %} {% block content %}
+<div class="mdl-grid typography--text-center">
+    <header class="mdl-cell mdl-cell--12-col">
+        {% if (country) %}
+        <h3>{{country.name}}</h3>
+        {% else %}
+        <h3>All missiles</h3>
+        {% endif %}
+        <p>This application has a list of missiles owned by different countries. If you know any more, please add.</p>
+    </header>
+</div>
+<div class="container">
+    <div class="columns">
+        {% for missile in missiles %}
+        <div class="card col-xs-12 col-md-6 col-xl-4 col-4">
+          <div class="card-image">
+            <img src="" class="img-responsive" />
+          </div>
+          <div class="card-header">
+            <h4 class="card-title">{{missile.name}}</h4>
+            <h6 class="card-meta">{{missile.description}}</h6>
+          </div>
+          <div class="card-body">
+            {{missile.description}}
+          </div>
+          <div class="card-footer">
+            <div class="btn-group btn-group-block">
+                <a href="{{missile.link}}" class="btn" target='_blank'><i class="fa fa-external-link"></i> View</a>
+                <a href="{{url_for('editMissile', country_id = missile.country_id, missile_id = missile.id)}}" class="btn"><i class="fa fa-edit"></i> Edit</a>
+                <a href="{{url_for('deleteMissile', country_id = missile.country_id, missile_id = missile.id)}}" class="btn"><i class="fa fa-trash"></i> Delete</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

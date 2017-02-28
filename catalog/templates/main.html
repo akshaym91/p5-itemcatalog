@@ -1,0 +1,18 @@
+{% extends "base.html" %} {% block bodycontent %}
+<div class="columns">
+    <div class="column col-2 drawer">
+        <ul class="nav">
+            {% for country in countries %}
+            <li class="nav-item">
+                <a class="btn btn-link" href="/country/delete"><i class="fa fa-trash"></i> </a> <a class="nav-item" href="{{url_for('showMissiles', country_id = country.id)}}">{{country.name}}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <main class="column col-10 drawer">
+        <div class="page-content">
+            {% block content %} {% endblock %}
+        </div>
+    </main>
+</div>
+{%endblock%}

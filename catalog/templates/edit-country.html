@@ -1,0 +1,28 @@
+{% extends "base.html" %} {% block bodycontent %}
+<main class="mdl-layout__content">
+    <div class="page-content">
+        <div class="mdl-grid typography--text-center">
+            <header class="mdl-cell mdl-cell--12-col">
+                <h1>Edit country</h1>
+            </header>
+        </div>
+        <div class="demo-container mdl-grid">
+            <div class="mdl-cell mdl-cell--2-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+            <div class="demo-content mdl-color--white mdl-shadow--4dp content mdl-color-text--grey-800 mdl-cell mdl-cell--8-col">
+                <h3>Edit country</h3>
+                <form action="#" method="post" autocomplete="on" >
+                    <div class="from-group">
+                        <label class="form-label" for="name">Country Name: </label>
+                        <input class="form-input" name="name" value="{{country.name}}" type="text" id="name">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-edit"></i> Edit Country</button>
+                        <a class="btn btn-link" href="{{url_for('showMissiles', country_id = country.id)}}">Cancel</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %} {% block bodycontent %}
+<main class="mdl-layout__content">
+    <div class="page-content">
+        <div class="mdl-grid typography--text-center">
+            <header class="mdl-cell mdl-cell--12-col">
+                <h1>Edit missile</h1>
+                <p>Gives a list of missiles owned by various countries around the world. If you know about some more, please add!</p>
+            </header>
+        </div>
+        <div class="demo-container mdl-grid">
+            <div class="mdl-cell mdl-cell--2-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+            <div class="demo-content mdl-color--white mdl-shadow--4dp content mdl-color-text--grey-800 mdl-cell mdl-cell--8-col">
+                <h3>Edit missile</h3>
+                <form action="#" method="post" autocomplete="on">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input" name="name" type="text" id="name" value="{{item.name}}">
+                        <label class="mdl-textfield__label" for="name">Missile Name: </label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input" name="description" type="text" value="{{item.description}}" id="description" autocomplete="name">
+                        <label class="mdl-textfield__label" for="description">Description: </label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input" name="country" type="text" value="{{item.country}}" id="country" autocomplete="name">
+                        <label class="mdl-textfield__label" for="country">Country: </label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input" name="link" value="{{item.link}}" type="text" id="link" autocomplete="name">
+                        <label class="mdl-textfield__label" for="link">Link: </label>
+                    </div>
+                    <div>
+                        <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                            Edit Missile : </button>
+                    </div>
+                </form>
+                <a href="{{url_for('showCountries', country_id = country_id)}}">Cancel</a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

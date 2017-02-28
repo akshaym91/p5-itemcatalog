@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Missiley</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='spectre.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='font-awesome-4.7.0/css/font-awesome.min.css') }}">
+    <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script src="//apis.google.com/js/platform.js?onload=start"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header class="navbar">
+            <section class="navbar-section">
+                <a href="/" class="navbar-brand">
+                    <i class="fa fa-fighter-jet"></i> Missiley
+                </a>
+
+            </section>
+            <section class="navbar-section">
+                <div class="input-group input-inline">
+                    {%if 'username' not in session %}
+                    <a class="btn btn-primary" href="{{url_for('login')}}">Login</a>
+                    {% else %}
+                    <div class="btn-group btn-group-block">
+                        <a href="/country/new" class="btn"><i class="fa fa-plus"></i> Add country</a>
+                        <a href="/" class="btn"><i class="fa fa-plus"></i> Add missile</a>
+                        <a class="btn btn-primary" href="{{url_for('logout')}}"><i class="fa fa-sign-out"></i> Logout</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </header>
+        {% block bodycontent %} {% endblock %}
+    </div>
+    <footer class="text-center">
+        &copy; 2016, <i><a class="btn btn-link" href="https://akshaym91.github.io">Akshay Menon</a></i>All Rights Reserved. Licensed under <a class="btn btn-link" href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a>
+    </footer>
+</body>
+
+</html>

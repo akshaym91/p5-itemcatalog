@@ -27,8 +27,8 @@ class Country(Base):
     def serialize(self):
         """return country data in serializeable format"""
         return {
-            'name':   self.name,
-            'id':   self.id
+            'name': self.name,
+            'id': self.id
         }
 
 
@@ -55,6 +55,6 @@ class Missile(Base):
             'link': self.link
         }
 
-engine = create_engine('sqlite:///missiledata.db')
+engine = create_engine('sqlite:///lots_of_missiles.db')
 
 Base.metadata.create_all(engine)

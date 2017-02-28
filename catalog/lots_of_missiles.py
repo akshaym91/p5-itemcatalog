@@ -19,19 +19,19 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 # create a dummy user
-User1 = User(name="Akshay Menon", email="makshay@somewhere.com",
+user1 = User(name="Akshay Menon", email="makshay@somewhere.com",
              picture='http://lorempixel.com/200/200/people/1')
-session.add(User1)
+session.add(user1)
 session.commit()
 
-User2 = User(name="Sharath Kumar", email="sharath@kumar.com",
+user2 = User(name="Sharath Kumar", email="sharath@kumar.com",
              picture='http://lorempixel.com/200/200/people/2')
-session.add(User2)
+session.add(user2)
 session.commit()
 
-User3 = User(name="Mithun Airani", email="mithun@home.com",
+user3 = User(name="Mithun Airani", email="mithun@home.com",
              picture='http://lorempixel.com/200/200/people/3')
-session.add(User3)
+session.add(user3)
 session.commit()
 
 # Creating country and its missiles

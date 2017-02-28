@@ -6,7 +6,7 @@ from flask import redirect
 from flask import jsonify
 from flask import url_for
 from flask import flash
-from flask import session as login_session
+from flask import session as session_object
 from flask import make_response
 # ORM: SQLAlchemy
 from sqlalchemy import create_engine, asc
@@ -43,12 +43,14 @@ session = DBSession()
 # User Helper Functions
 
 
-def create_user(login_session):
-    newUser = User(name=login_session['username'], email=login_session[
-                   'email'], picture=login_session['picture'])
+def create_user(session_object):
+    newUser = User(
+        name=session_object['username'],
+        email=session_object['email'],
+        picture=session_object['picture'])
     session.add(newUser)
     session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
+    user = session.query(User).filter_by(email=session_object['email']).one()
     return user.id
 
 
@@ -76,14 +78,14 @@ def login():
     state = ''.join(random.choice(
         string.ascii_uppercase + string.digits) for x in xrange(32))
     # Store the state in the login session object
-    login_session['state'] = state
+    session_object['state'] = state
     return render_template('login.html', STATE=state)
 
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Check for valid state
-    if request.args.get('state') != login_session['state']:
+    if request.args.get('state') != session_object['state']:
         response = make_response(json.dumps(
             'Invalid state parameter. This could be due to a session riding attack.'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -129,8 +131,8 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    stored_credentials = login_session.get('credentials')
-    stored_gplus_id = login_session.get('gplus_id')
+    stored_credentials = session_object.get('credentials')
+    stored_gplus_id = session_object.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
         response = make_response(json.dumps(
             'User active.'), 200)
@@ -138,9 +140,9 @@ def gconnect():
         return response
 
     # Store the access token in the session for later use.
-    login_session['provider'] = 'google'
-    login_session['credentials'] = credentials.to_json()
-    login_session['gplus_id'] = gplus_id
+    session_object['provider'] = 'google'
+    session_object['credentials'] = credentials.to_json()
+    session_object['gplus_id'] = gplus_id
 
     # Get user info
     url = "https://www.googleapis.com/oauth2/v1/userinfo"
@@ -149,24 +151,24 @@ def gconnect():
 
     data = g_response.json()
 
-    login_session['username'] = data['name']
-    login_session['picture'] = data['picture']
-    login_session['email'] = data['email']
+    session_object['username'] = data['name']
+    session_object['picture'] = data['picture']
+    session_object['email'] = data['email']
 
-    user_id = get_userid_by_email(login_session['email'])
+    user_id = get_userid_by_email(session_object['email'])
     if not user_id:
-        user_id = create_user(login_session)
+        user_id = create_user(session_object)
 
-    login_session['user_id'] = user_id
+    session_object['user_id'] = user_id
 
     output = ''
     output += '<h1>Welcome, '
-    output += login_session['username']
+    output += session_object['username']
     output += '!</h1>'
     output += '<img src="'
-    output += login_session['picture']
+    output += session_object['picture']
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("you are now logged in as %s" % login_session['username'])
+    flash("you are now logged in as %s" % session_object['username'])
     print "done!"
     return output
 
@@ -174,24 +176,25 @@ def gconnect():
 @app.route('/gdisconnect')
 def gdisconnect():
         # Only disconnect a connected user.
-    credentials = login_session.get('credentials')
+    credentials = session_object.get('credentials')
     if credentials is None:
         response = make_response(
             json.dumps('User Inactive.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    access_token = credentials.access_token
+    credentials = json.loads(credentials)
+    access_token = credentials.get('access_token')
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
 
     if result['status'] == '200':
         # Delete session variables
-        del login_session['credentials']
-        del login_session['gplus_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['picture']
+        del session_object['credentials']
+        del session_object['gplus_id']
+        del session_object['username']
+        del session_object['email']
+        del session_object['picture']
 
         response = make_response(json.dumps('Google logged out.'), 200)
         response.headers['Content-Type'] = 'application/json'
@@ -207,7 +210,7 @@ def gdisconnect():
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
     # Check for valid state
-    if request.args.get('state') != login_session['state']:
+    if request.args.get('state') != session_object['state']:
         response = make_response(json.dumps(
             'Invalid state parameter. This could be due to a session riding attack.'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -236,13 +239,13 @@ def fbconnect():
     data = json.loads(result)
 
     # Save the details to the session object
-    login_session['provider'] = 'facebook'
-    login_session['username'] = data["name"]
-    login_session['email'] = data["email"]
-    login_session['facebook_id'] = data["id"]
+    session_object['provider'] = 'facebook'
+    session_object['username'] = data["name"]
+    session_object['email'] = data["email"]
+    session_object['facebook_id'] = data["id"]
 
     stored_token = token.split("=")[1]
-    login_session['access_token'] = stored_token
+    session_object['access_token'] = stored_token
 
     # Accessing the picture using facebook oauth
     url = 'https://graph.facebook.com/v2.4/me/picture?%s&redirect=0&height=200&width=200' % token
@@ -250,31 +253,31 @@ def fbconnect():
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
 
-    login_session['picture'] = data["data"]["url"]
+    session_object['picture'] = data["data"]["url"]
 
     # User ID Check
-    user_id = get_userid_by_email(login_session['email'])
+    user_id = get_userid_by_email(session_object['email'])
     if not user_id:
-        user_id = create_user(login_session)
-    login_session['user_id'] = user_id
+        user_id = create_user(session_object)
+    session_object['user_id'] = user_id
 
     output = ''
     output += '<h1>Welcome, '
-    output += login_session['username']
+    output += session_object['username']
 
     output += '!</h1>'
     output += '<img src="'
-    output += login_session['picture']
+    output += session_object['picture']
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
-    flash("Now logged in as %s" % login_session['username'])
+    flash("Now logged in as %s" % session_object['username'])
     return output
 
 
 @app.route('/fbdisconnect')
 def fbdisconnect():
-    facebook_id = login_session['facebook_id']
-    access_token = login_session['access_token']
+    facebook_id = session_object['facebook_id']
+    access_token = session_object['access_token']
     url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (
         facebook_id, access_token)
     h = httplib2.Http()
@@ -284,31 +287,28 @@ def fbdisconnect():
 
 @app.route('/logout')
 def logout():
-    if 'provider' in login_session:
-        if login_session['provider'] == 'google':
+    if 'provider' in session_object:
+        if session_object['provider'] == 'google':
             gdisconnect()
-            del login_session['gplus_id']
-        if login_session['provider'] == 'facebook':
+            del session_object['gplus_id']
+        if session_object['provider'] == 'facebook':
             fbdisconnect()
-            del login_session['facebook_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['picture']
-        del login_session['user_id']
-        del login_session['provider']
+            del session_object['facebook_id']
+        del session_object['username']
+        del session_object['email']
+        del session_object['picture']
+        del session_object['user_id']
+        del session_object['provider']
         flash("You have successfully been logged out.")
         return redirect(url_for('showCountries'))
     else:
         flash("You were not logged in")
         return redirect(url_for('showCountries'))
-# ||------------------------------------------------||
-# || End for generic code for the application       ||
-# ||------------------------------------------------||
-
 
 # ||------------------------------------------------||
 # || REST Implementation for the application        ||
 # ||------------------------------------------------||
+
 
 @app.route('/country/JSON')
 def countriesJSON():
@@ -337,23 +337,29 @@ def missileJSON(country_id, missile_id):
 # ||------------------------------------------------||
 @app.route('/')
 def showCountries():
+    '''Method to show all the countries currently added to application'''
     missiles = session.query(Missile).order_by(asc(Missile.name))
     countries = session.query(Country).order_by(asc(Country.name))
-    if 'username' not in login_session:
-        return render_template('public_missiles.html', missiles=missiles, countries=countries)
+    if 'username' not in session_object:
+        return render_template('public_missiles.html',
+                               missiles=missiles,
+                               countries=countries)
     else:
-        return render_template('private_missiles.html', missiles=missiles, countries=countries)
+        return render_template('private_missiles.html',
+                               missiles=missiles,
+                               countries=countries)
 
 
 @app.route('/country/new', methods=['GET', 'POST'])
 def newCountry():
-    if 'username' not in login_session:
+    '''Method to add a new country'''
+    if 'username' not in session_object:
         return redirect('/login')
     if request.method == 'POST':
         newCountry = Country(name=request.form['name'],
-                             user_id=login_session['user_id'])
+                             user_id=session_object['user_id'])
         session.add(newCountry)
-        flash('Succesfully added %s country' % newCountry.name)
+        flash('Succesfully added new country: %s' % newCountry.name)
         session.commit()
         return redirect(url_for('showCountries'))
     else:
@@ -362,10 +368,11 @@ def newCountry():
 
 @app.route('/country/<int:country_id>/edit/', methods=['GET', 'POST'])
 def editCountry(country_id):
-    if 'username' not in login_session:
+    '''Edit a country from the application'''
+    if 'username' not in session_object:
         return redirect('/login')
     editedCountry = session.query(Country).filter_by(id=country_id).one()
-    if editedCountry.user_id != login_session['user_id']:
+    if editedCountry.user_id != session_object['user_id']:
         return """<script>(function() {alert("not authorized");})();</script>"""
     if request.method == 'POST':
         if request.form['name']:
@@ -373,49 +380,55 @@ def editCountry(country_id):
             flash('Country successfully edited %s' % editedCountry.name)
             return redirect(url_for('showCountries'))
     else:
-        return render_template('edit-country.html', country=editedCountry)
-
-# Delete a country
+        return render_template('edit-country.html',
+                               country=editedCountry)
 
 
 @app.route('/country/<int:country_id>/delete/', methods=['GET', 'POST'])
 def deleteCountry(country_id):
-    if 'username' not in login_session:
+    '''Delete a country from the application'''
+    if 'username' not in session_object:
         return redirect('/login')
     countryToDelete = session.query(Country).filter_by(id=country_id).one()
-    if countryToDelete.user_id != login_session['user_id']:
+    if countryToDelete.user_id != session_object['user_id']:
         return """<script>(function() {alert("not authorized");})();</script>"""
     if request.method == 'POST':
         session.delete(countryToDelete)
         flash('%s successfully deleted' % countryToDelete.name)
         session.commit()
-        return redirect(url_for('showCountries', country_id=country_id))
+        return redirect(url_for('showCountries',
+                                country_id=country_id))
     else:
-        return render_template('delete-country.html', country=countryToDelete)
-
-# Show missiles from a country
+        return render_template('delete-country.html',
+                               country=countryToDelete)
 
 
 @app.route('/country/<int:country_id>/')
 @app.route('/country/<int:country_id>/missiles/')
 def showMissiles(country_id):
+    '''Show missiles belonging to a country depending on authorization'''
     country = session.query(Country).filter_by(id=country_id).one()
     countries = session.query(Country).order_by(asc(Country.name))
     creator = get_user_by_id(country.user_id)
     missiles = session.query(Missile).filter_by(country_id=country_id).all()
-    if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('public_missiles.html', missiles=missiles,
-                               country=country, countries=countries, creator=creator)
+    if 'username' not in session_object or creator.id != session_object['user_id']:
+        return render_template('public_missiles.html',
+                               missiles=missiles,
+                               country=country,
+                               countries=countries,
+                               creator=creator)
     else:
-        return render_template('private_missiles.html', missiles=missiles,
-                               country=country, countries=countries, creator=creator)
-
-# Create a new missile for a country
+        return render_template('private_missiles.html',
+                               missiles=missiles,
+                               country=country,
+                               countries=countries,
+                               creator=creator)
 
 
 @app.route('/country/<int:country_id>/missiles/new/', methods=['GET', 'POST'])
 def newMissile(country_id):
-    if 'username' not in login_session:
+    '''Method to add a missile to country'''
+    if 'username' not in session_object:
         return redirect('/login')
     country = session.query(Country).filter_by(id=country_id).one()
     if request.method == 'POST':
@@ -424,24 +437,25 @@ def newMissile(country_id):
                              band_name=request.form['band_name'],
                              country=request.form['country'],
                              youtube_url=request.form['youtube_url'],
-                             user_id=login_session['user_id'])
+                             user_id=session_object['user_id'])
         session.add(newMissile)
         session.commit()
         flash('New missile %s successfully created' % (newMissile.name))
-        return redirect(url_for('showMissiles', country_id=country_id))
+        return redirect(url_for('showMissiles',
+                                country_id=country_id))
     else:
-        return render_template('new-missile.html', country_id=country_id)
-
-# Edit a missile
+        return render_template('new-missile.html',
+                               country_id=country_id)
 
 
 @app.route('/country/<int:country_id>/missile/<int:missile_id>/edit', methods=['GET', 'POST'])
 def editMissile(country_id, missile_id):
-    if 'username' not in login_session:
+    '''Method to edit a missile'''
+    if 'username' not in session_object:
         return redirect('/login')
     editedMissile = session.query(Missile).filter_by(id=missile_id).one()
     country = session.query(Country).filter_by(id=country_id).one()
-    if editedMissile.user_id != login_session['user_id']:
+    if editedMissile.user_id != session_object['user_id']:
         return """<script>(function() {alert("not authorized");})();</script>"""
     if request.method == 'POST':
         if request.form['name']:
@@ -455,20 +469,23 @@ def editMissile(country_id, missile_id):
         session.add(editedMissile)
         session.commit()
         flash('Missile successfully edited')
-        return redirect(url_for('showMissiles', country_id=country_id))
+        return redirect(url_for('showMissiles',
+                                country_id=country_id))
     else:
-        return render_template('edit-missile.html', country_id=country_id, missile_id=missile_id, item=editedMissile)
-
-# Delete a missile
+        return render_template('edit-missile.html',
+                               country_id=country_id,
+                               missile_id=missile_id,
+                               item=editedMissile)
 
 
 @app.route('/country/<int:country_id>/missiles/<int:missile_id>/delete', methods=['GET', 'POST'])
 def deleteMissile(country_id, missile_id):
-    if 'username' not in login_session:
+    '''Method to delete a missile'''
+    if 'username' not in session_object:
         return redirect('/login')
     country = session.query(Country).filter_by(id=country_id).one()
     missileToDelete = session.query(Missile).filter_by(id=missile_id).one()
-    if missileToDelete.user_id != login_session['user_id']:
+    if missileToDelete.user_id != session_object['user_id']:
         return """<script>(function() {alert("not authorized");})();</script>"""
     if request.method == 'POST':
         session.delete(missileToDelete)
