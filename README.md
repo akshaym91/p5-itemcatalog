@@ -1,23 +1,32 @@
-# My Show Book
-Udacity Fullstack Web Developer Project 5: A Movie items catalog
+# Missiley
+Udacity Fullstack Web Developer Project 5: A Country-Missile Catalog
 
 This project is built with Python backend with:
 - Flask as the web framework to expose APIs
+- Spectre.css as the CSS framework for the look and feel
+- OAuth implementation using GPlus and Facebook
+- CRUD operations into an SQLLite Database
+- SQL Alchemy as an ORM
 
 ##Public URL
-The public url for this blog is: https://pyblog-154013.appspot.com/blog
+The project is yet to be hosted on cloud.
 
 ##How to Use?
-1. Install [Python2.7](https://www.python.org/) and ensure that it is added to the environment variable.
-2. Install Google app engines desktop client.
-3. Clone this repo:
-4. Navigate to the folder:
+1. Unpack the zip into a folder or clone the repo.
+2. Using the VagrantFile attached, start a VM.
 ```
-cd p2-blog
+vagrant up
 ```
-4. Run the project:
 ```
-dev_appserver.py .
+vagrant ssh
+```
+3. Place the rest of the contents (other than the VagrantFile) in the /vagrant folder and move to that folder.
+```
+cd /vagrant/catalog
+```
+4. At the root level, run
+```
+python app.py
 ```
 
 ##Author

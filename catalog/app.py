@@ -189,13 +189,6 @@ def gdisconnect():
     result = h.request(url, 'GET')[0]
 
     if result['status'] == '200':
-        # Delete session variables
-        del session_object['credentials']
-        del session_object['gplus_id']
-        del session_object['username']
-        del session_object['email']
-        del session_object['picture']
-
         response = make_response(json.dumps('Google logged out.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -290,7 +283,7 @@ def logout():
     if 'provider' in session_object:
         if session_object['provider'] == 'google':
             gdisconnect()
-            del session_object['gplus_id']
+            del session_object['credentials']
         if session_object['provider'] == 'facebook':
             fbdisconnect()
             del session_object['facebook_id']
@@ -298,7 +291,6 @@ def logout():
         del session_object['email']
         del session_object['picture']
         del session_object['user_id']
-        del session_object['provider']
         flash("You have successfully been logged out.")
         return redirect(url_for('showCountries'))
     else:
@@ -373,7 +365,7 @@ def editCountry(country_id):
         return redirect('/login')
     editedCountry = session.query(Country).filter_by(id=country_id).one()
     if editedCountry.user_id != session_object['user_id']:
-        return """<script>(function() {alert("not authorized");})();</script>"""
+        return """<script>(function() {alert("Access denied. Only creator can edit."); window.location.href = "/";})();</script>"""
     if request.method == 'POST':
         if request.form['name']:
             editedCountry.name = request.form['name']
@@ -391,7 +383,7 @@ def deleteCountry(country_id):
         return redirect('/login')
     countryToDelete = session.query(Country).filter_by(id=country_id).one()
     if countryToDelete.user_id != session_object['user_id']:
-        return """<script>(function() {alert("not authorized");})();</script>"""
+        return """<script>(function() {alert("Access denied. Only creator can delete."); window.location.href = "/";})();</script>"""
     if request.method == 'POST':
         session.delete(countryToDelete)
         flash('%s successfully deleted' % countryToDelete.name)
@@ -411,7 +403,9 @@ def showMissiles(country_id):
     countries = session.query(Country).order_by(asc(Country.name))
     creator = get_user_by_id(country.user_id)
     missiles = session.query(Missile).filter_by(country_id=country_id).all()
-    if 'username' not in session_object or creator.id != session_object['user_id']:
+    # if 'username' not in session_object or creator.id !=
+    # session_object['user_id']:
+    if 'username' not in session_object:
         return render_template('public_missiles.html',
                                missiles=missiles,
                                country=country,
@@ -434,9 +428,8 @@ def newMissile(country_id):
     if request.method == 'POST':
         newMissile = Missile(name=request.form['name'],
                              country_id=country_id,
-                             band_name=request.form['band_name'],
-                             country=request.form['country'],
-                             youtube_url=request.form['youtube_url'],
+                             description=request.form['description'],
+                             link=request.form['link'],
                              user_id=session_object['user_id'])
         session.add(newMissile)
         session.commit()
@@ -456,16 +449,14 @@ def editMissile(country_id, missile_id):
     editedMissile = session.query(Missile).filter_by(id=missile_id).one()
     country = session.query(Country).filter_by(id=country_id).one()
     if editedMissile.user_id != session_object['user_id']:
-        return """<script>(function() {alert("not authorized");})();</script>"""
+        return """<script>(function() {alert("Access denied. Only creator can edit.");  window.location.href = "/";})();</script>"""
     if request.method == 'POST':
         if request.form['name']:
             editedMissile.name = request.form['name']
-        if request.form['band_name']:
-            editedMissile.band_name = request.form['band_name']
-        if request.form['country']:
-            editedMissile.country = request.form['country']
-        if request.form['youtube_url']:
-            editedMissile.youtube_url = request.form['youtube_url']
+        if request.form['description']:
+            editedMissile.description = request.form['description']
+        if request.form['link']:
+            editedMissile.link = request.form['link']
         session.add(editedMissile)
         session.commit()
         flash('Missile successfully edited')
@@ -486,12 +477,12 @@ def deleteMissile(country_id, missile_id):
     country = session.query(Country).filter_by(id=country_id).one()
     missileToDelete = session.query(Missile).filter_by(id=missile_id).one()
     if missileToDelete.user_id != session_object['user_id']:
-        return """<script>(function() {alert("not authorized");})();</script>"""
+        return """<script>(function() {alert("Access denied. Only creator can delete."); window.location.href = "/";})();</script>"""
     if request.method == 'POST':
         session.delete(missileToDelete)
         session.commit()
         flash('Missile successfully deleted')
-        return redirect(url_for('showMissile', country_id=country_id))
+        return redirect(url_for('showMissiles', country_id=country_id))
     else:
         return render_template('delete-missile.html', item=missileToDelete)
 

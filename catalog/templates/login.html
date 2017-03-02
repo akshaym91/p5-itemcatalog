@@ -6,33 +6,50 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Missiley</title>
-    <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.2/material.green-pink.min.css">
-    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='spectre.min.css') }}">
-    <!-- <script src="https://storage.googleapis.com/code.getmdl.io/1.0.0/material.min.js"></script> -->
     <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
     <script src="//apis.google.com/js/platform.js?onload=start"></script>
     <!--LOAD PRE-REQUISITES FOR GOOGLE SIGN IN -->
-    <script src="//apis.google.com/js/platform.js?onload=start"></script>
-    <!-- END PRE-REQUISITES FOR GOOGLE SIGN IN -->
 </head>
 
 <body>
-    <div class="demo-container mdl-grid">
-        <div class="mdl-cell mdl-cell--2-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
-        <div class="demo-content mdl-color--white mdl-shadow--4dp content mdl-color-text--grey-800 mdl-cell mdl-cell--8-col">
-            <h3>Login</h3>
-            <!-- GOOGLE PLUS SIGN IN BUTTON-->
-            <div id="signInButton">
-                <span class="g-signin" data-scope="openid email" data-clientid="106958044139-dc6kos9kmu96of2ou8ou9dj1vj0rnv5i.apps.googleusercontent.com" data-redirecturi="postmessage" data-accesstype="offline" data-cookiepolicy="single_host_origin" data-callback="signInCallback" data-approvalprompt="force">
-        </span>
+    <div class="container">
+        <div class="columns">
+            <div class="column col-md-4"></div>
+            <div class="column col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>OAuth Login</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="divider"></div>
+                        <div id="signInButton">
+                            <div class="g-button">
+                                <span class="g-signin" data-scope="openid email" data-clientid="106958044139-dc6kos9kmu96of2ou8ou9dj1vj0rnv5i.apps.googleusercontent.com" data-redirecturi="postmessage" data-accesstype="offline" data-cookiepolicy="single_host_origin" data-callback="signInCallback" data-approvalprompt="force"></span>
+                            </div>
+                            <div class="fb-button">
+                                <fb:login-button scope="public_profile,email" onlogin="checkLoginState();">
+                            </fb:login-button>
+                            </div>
+                        </div>
+                        <div id="status"></div>
+                        <div id="loading"></div>
+                    </div>
+                </div>
             </div>
+            <div class="column col-md-4"></div>
             <script type="text/javascript">
             function signInCallback(authResult) {
                 if (authResult['code']) {
                     // hide sign-in button, now that user is authorized
+                    console.log(authResult);
                     $('#signInButton').hide();
+                    $('#loading').append(
+                        $('<button/>').attr({
+                            class: 'btn btn-block loading'
+                        })
+                    );
                     // send one time code to server, if the server responds write login successful and redirect
                     $.ajax({
                         type: 'POST',
@@ -40,12 +57,13 @@
                         processData: false,
                         data: authResult['code'],
                         contentType: 'application/octet-stream; charset=utf-8',
-                        success: function(result) {
+                        success: function(result, a, b) {
                             if (result) {
-                                $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
+                                $('#status').html(result);
+                                $('#loading').hide();
                                 setTimeout(function() {
                                     window.location.href = '/';
-                                }, 4000);
+                                }, 0);
                             } else if (authResult['error']) {
                                 console.log('There was an error: ' + authResult['error']);
                             } else {
@@ -56,16 +74,63 @@
                 }
             }
             </script>
-            <!--END GOOGLE PLUS SIGN IN BUTTON -->
             <!--FACEBOOK SIGN IN -->
             <script>
+            // This is called with the results from from FB.getLoginStatus().
+            function statusChangeCallback(response) {
+                // The response object is returned with a status field that lets the
+                // app know the current login status of the person.
+                // Full docs on the response object can be found in the documentation
+                // for FB.getLoginStatus().
+                if (response.status === 'connected') {
+                    // Logged into your app and Facebook.
+                    testAPI();
+                } else if (response.status === 'not_authorized') {
+                    // The person is logged into Facebook, but not your app.
+                    console.log("Status: "+response.status);
+                } else {
+                    // The person is not logged into Facebook, so we're not sure if
+                    // they are logged into this app or not.
+                    console.log("Status: "+response.status);
+                }
+            }
+
+            // This function is called when someone finishes with the Login
+            // Button.  See the onlogin handler attached to it in the sample
+            // code below.
+            function checkLoginState() {
+                FB.getLoginStatus(function(response) {
+                    statusChangeCallback(response);
+                });
+            }
+
             window.fbAsyncInit = function() {
                 FB.init({
                     appId: '1176993122399809',
                     xfbml: true,
-                    version: 'v2.5'
+                    version: 'v2.8'
                 });
+
+                // Now that we've initialized the JavaScript SDK, we call
+                // FB.getLoginStatus().  This function gets the state of the
+                // person visiting this page and can return one of three states to
+                // the callback you provide.  They can be:
+                //
+                // 1. Logged into your app ('connected')
+                // 2. Logged into Facebook, but not your app ('not_authorized')
+                // 3. Not logged into Facebook and can't tell if they are logged into
+                //    your app or not.
+                //
+                // These three cases are handled in the callback function.
+
+                FB.getLoginStatus(function(response) {
+                    statusChangeCallback(response);
+                });
+                // FB.AppEvents.logPageView();
+
             };
+
+            // Load the SDK asynchronously
             (function(d, s, id) {
                 var js, fjs = d.getElementsByTagName(s)[0];
                 if (d.getElementById(id)) {
@@ -73,17 +138,25 @@
                 }
                 js = d.createElement(s);
                 js.id = id;
-                js.src = '//connect.facebook.net/en_US/sdk.js';
+                js.src = "//connect.facebook.net/en_US/sdk.js";
                 fjs.parentNode.insertBefore(js, fjs);
             }(document, 'script', 'facebook-jssdk'));
-            // Here we run a very simple test of the Graph API after login is successful.
-            //See statusChangeCallback() for when this call is made.
-            function sendTokenToServer() {
-                var access_token = FB.getAuthResponse()['accessToken'];
-                console.log(access_token)
+
+            // Here we run a very simple test of the Graph API after login is
+            // successful.  See statusChangeCallback() for when this call is made.
+            function testAPI() {
                 console.log('Welcome!  Fetching your information.... ');
+                var access_token = FB.getAuthResponse()['accessToken'];
+                $('#loading').append(
+                    $('<button/>').attr({
+                        class: 'btn btn-block loading'
+                    })
+                );
                 FB.api('/me', function(response) {
                     console.log('Successful login for: ' + response.name);
+                    $('#signInButton').hide();
+                    $('#status').addClass('toast');
+                    $('#status').text('Logged in as , ' + response.name + '!');
                     $.ajax({
                         type: 'POST',
                         url: '/fbconnect?state={{STATE}}',
@@ -96,7 +169,7 @@
                                 $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
                                 setTimeout(function() {
                                     window.location.href = '/';
-                                }, 4000);
+                                }, 0);
                             } else {
                                 $('#result').html('Failed to make a server-side call. Check your configuration and console.');
                             }
@@ -105,11 +178,7 @@
                 });
             }
             </script>
-            <button>
-                <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
-                    <a href='javascript:sendTokenToServer()'>Login with Facebook</a>
-                </fb:login-button>
-            </button>
+            <!--END GOOGLE PLUS SIGN IN BUTTON -->
             <!--END FACEBOOK SIGN IN -->
         </div>
     </div>

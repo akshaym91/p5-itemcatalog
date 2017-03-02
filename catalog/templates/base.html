@@ -28,9 +28,11 @@
                     <a class="btn btn-primary" href="{{url_for('login')}}">Login</a>
                     {% else %}
                     <div class="btn-group btn-group-block">
-                        <a href="/country/new" class="btn"><i class="fa fa-plus"></i> Add country</a>
-                        <a href="/" class="btn"><i class="fa fa-plus"></i> Add missile</a>
                         <a class="btn btn-primary" href="{{url_for('logout')}}"><i class="fa fa-sign-out"></i> Logout</a>
+                        <div class="chip">
+                          <img src="{{session.picture}}" class="avatar avatar-sm" />
+                          {{session.username}}
+                        </div>
                     </div>
                     {% endif %}
                 </div>

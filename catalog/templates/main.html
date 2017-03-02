@@ -2,9 +2,10 @@
 <div class="columns">
     <div class="column col-2 drawer">
         <ul class="nav">
+            <a href="/country/new" class="btn"><i class="fa fa-plus"></i> Add Country</a>
             {% for country in countries %}
             <li class="nav-item">
-                <a class="btn btn-link" href="/country/delete"><i class="fa fa-trash"></i> </a> <a class="nav-item" href="{{url_for('showMissiles', country_id = country.id)}}">{{country.name}}</a>
+                <a class="btn btn-link" href="/country/{{country.id}}/delete"><i class="fa fa-trash"></i> </a> <a class="nav-item" href="{{url_for('showMissiles', country_id = country.id)}}">{{country.name}}</a>
             </li>
             {% endfor %}
         </ul>

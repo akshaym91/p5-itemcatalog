@@ -1,14 +1,8 @@
-#fab {
-    position: fixed;
-    bottom: 1em;
-    right: 1em;
-    z-index: 1000;
+.g-button, .fb-button {
+    display: table;
+    margin: 2em auto;
 }
 
-.demo-content.mdl-cell {
-    padding: 1em;
-}
-
-form button[type="submit"] {
-    margin: 2em 0;
+#loading {
+    margin-top: 2em 0;
 }

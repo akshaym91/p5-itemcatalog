@@ -1,30 +1,25 @@
 {% extends "base.html" %} {% block bodycontent %}
-<main class="mdl-layout__content">
-    <div class="page-content">
-        <div class="mdl-grid typography--text-center">
-            <header class="mdl-cell mdl-cell--12-col">
+<main class="container">
+    <div class="">
+        <div class="">
+            <header class="">
                 <h1>Add a new missile</h1>
                 <p>This application has a list of missiles owned by different countries. If you know any more, please add.</p>
             </header>
         </div>
-        <div class="demo-container mdl-grid">
-            <div class="mdl-cell mdl-cell--2-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
-            <div class="demo-content mdl-color--white mdl-shadow--4dp content mdl-color-text--grey-800 mdl-cell mdl-cell--8-col">
+        <div class="container">
+            <div class="">
                 <h3>Create a new missile</h3>
-                <form action="#" method="post" autocomplete="on">
-                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <form action="/country/{{country_id}}/missiles/new/" method="post" autocomplete="on">
+                    <div class="form-group">
                         <label class="form-label" for="name">Missile Name: </label>
                         <input class="form-input" name="name" type="text" id="name">
                     </div>
-                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <div class="form-group">
                         <label class="form-label" for="description">Description: </label>
-                        <input class="form-input" name="description" type="text" id="description" autocomplete="name">
+                        <textarea class="form-input" name="description" type="text" id="description" autocomplete="name" rows="3"></textarea>
                     </div>
-                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                        <label class="form-label" for="country">Country: </label>
-                        <input class="form-input" name="country" type="text" id="country" autocomplete="name">
-                    </div>
-                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <div class="form-group">
                         <label class="form-label" for="link">Link: </label>
                         <input class="form-input" name="link" type="text" id="link" autocomplete="name">
                     </div>
