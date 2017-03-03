@@ -17,12 +17,21 @@ The project is yet to be hosted on cloud.
 ```
 vagrant up
 ```
+SSH into the machine as `vagrant` user
 ```
 vagrant ssh
 ```
 3. Place the rest of the contents (other than the VagrantFile) in the /vagrant folder and move to that folder.
 ```
 cd /vagrant/catalog
+```
+4. Setup the Database by running:
+```
+python databsae_setup.py
+```
+5. To initialiaze the databse with some values:
+```
+python lots_of_missiles.py
 ```
 4. At the root level, run
 ```

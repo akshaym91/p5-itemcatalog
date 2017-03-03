@@ -51,7 +51,7 @@ class Missile(Base):
             'name': self.name,
             'id': self.id,
             'description': self.description,
-            'country': self.country,
+            'country': self.country_id,
             'link': self.link
         }
 

@@ -8,6 +8,7 @@ from flask import url_for
 from flask import flash
 from flask import session as session_object
 from flask import make_response
+from functools import wraps
 # ORM: SQLAlchemy
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
@@ -41,6 +42,18 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 # User Helper Functions
+
+
+def login_required(f):
+    '''Decorator function to check if the user is logged in'''
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session_object:
+            flash("Authorization fail: Access denied.")
+            return redirect('/login')
+        else:
+            return f(*args, **kwargs)
+    return decorated_function
 
 
 def create_user(session_object):
@@ -87,7 +100,8 @@ def gconnect():
     # Check for valid state
     if request.args.get('state') != session_object['state']:
         response = make_response(json.dumps(
-            'Invalid state parameter. This could be due to a session riding attack.'), 401)
+            'Invalid state parameter. This could be due to a session riding \
+            attack.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     # Authorization code from Google
@@ -167,7 +181,8 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += session_object['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;\
+    -webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % session_object['username'])
     print "done!"
     return output
@@ -205,7 +220,8 @@ def fbconnect():
     # Check for valid state
     if request.args.get('state') != session_object['state']:
         response = make_response(json.dumps(
-            'Invalid state parameter. This could be due to a session riding attack.'), 401)
+            'Invalid state parameter. This could be due to a session \
+            riding attack.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     # Facebook Access Token
@@ -216,7 +232,8 @@ def fbconnect():
         'web']['app_id']
     app_secret = json.loads(
         open('fb_client_secrets.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type=\
+    fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
         app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
@@ -241,7 +258,8 @@ def fbconnect():
     session_object['access_token'] = stored_token
 
     # Accessing the picture using facebook oauth
-    url = 'https://graph.facebook.com/v2.4/me/picture?%s&redirect=0&height=200&width=200' % token
+    url = 'https://graph.facebook.com/v2.4/me/picture?%s&redirect=0&\
+    height=200&width=200' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -261,7 +279,8 @@ def fbconnect():
     output += '!</h1>'
     output += '<img src="'
     output += session_object['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;\
+    -webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
     flash("Now logged in as %s" % session_object['username'])
     return output
@@ -343,10 +362,9 @@ def showCountries():
 
 
 @app.route('/country/new', methods=['GET', 'POST'])
+@login_required
 def newCountry():
     '''Method to add a new country'''
-    if 'username' not in session_object:
-        return redirect('/login')
     if request.method == 'POST':
         newCountry = Country(name=request.form['name'],
                              user_id=session_object['user_id'])
@@ -359,13 +377,13 @@ def newCountry():
 
 
 @app.route('/country/<int:country_id>/edit/', methods=['GET', 'POST'])
+@login_required
 def editCountry(country_id):
     '''Edit a country from the application'''
-    if 'username' not in session_object:
-        return redirect('/login')
     editedCountry = session.query(Country).filter_by(id=country_id).one()
     if editedCountry.user_id != session_object['user_id']:
-        return """<script>(function() {alert("Access denied. Only creator can edit."); window.location.href = "/";})();</script>"""
+        return """<script>(function() {alert("Access denied. Only creator \
+        can edit."); window.location.href = "/";})();</script>"""
     if request.method == 'POST':
         if request.form['name']:
             editedCountry.name = request.form['name']
@@ -377,13 +395,13 @@ def editCountry(country_id):
 
 
 @app.route('/country/<int:country_id>/delete/', methods=['GET', 'POST'])
+@login_required
 def deleteCountry(country_id):
     '''Delete a country from the application'''
-    if 'username' not in session_object:
-        return redirect('/login')
     countryToDelete = session.query(Country).filter_by(id=country_id).one()
     if countryToDelete.user_id != session_object['user_id']:
-        return """<script>(function() {alert("Access denied. Only creator can delete."); window.location.href = "/";})();</script>"""
+        return """<script>(function() {alert("Access denied. Only creator \
+        can delete."); window.location.href = "/";})();</script>"""
     if request.method == 'POST':
         session.delete(countryToDelete)
         flash('%s successfully deleted' % countryToDelete.name)
@@ -403,8 +421,6 @@ def showMissiles(country_id):
     countries = session.query(Country).order_by(asc(Country.name))
     creator = get_user_by_id(country.user_id)
     missiles = session.query(Missile).filter_by(country_id=country_id).all()
-    # if 'username' not in session_object or creator.id !=
-    # session_object['user_id']:
     if 'username' not in session_object:
         return render_template('public_missiles.html',
                                missiles=missiles,
@@ -420,10 +436,9 @@ def showMissiles(country_id):
 
 
 @app.route('/country/<int:country_id>/missiles/new/', methods=['GET', 'POST'])
+@login_required
 def newMissile(country_id):
     '''Method to add a missile to country'''
-    if 'username' not in session_object:
-        return redirect('/login')
     country = session.query(Country).filter_by(id=country_id).one()
     if request.method == 'POST':
         newMissile = Missile(name=request.form['name'],
@@ -441,15 +456,16 @@ def newMissile(country_id):
                                country_id=country_id)
 
 
-@app.route('/country/<int:country_id>/missile/<int:missile_id>/edit', methods=['GET', 'POST'])
+@app.route('/country/<int:country_id>/missile/<int:missile_id>/edit',
+           methods=['GET', 'POST'])
+@login_required
 def editMissile(country_id, missile_id):
     '''Method to edit a missile'''
-    if 'username' not in session_object:
-        return redirect('/login')
     editedMissile = session.query(Missile).filter_by(id=missile_id).one()
     country = session.query(Country).filter_by(id=country_id).one()
     if editedMissile.user_id != session_object['user_id']:
-        return """<script>(function() {alert("Access denied. Only creator can edit.");  window.location.href = "/";})();</script>"""
+        return """<script>(function() {alert("Access denied. Only creator \
+        can edit.");  window.location.href = "/";})();</script>"""
     if request.method == 'POST':
         if request.form['name']:
             editedMissile.name = request.form['name']
@@ -469,15 +485,16 @@ def editMissile(country_id, missile_id):
                                item=editedMissile)
 
 
-@app.route('/country/<int:country_id>/missiles/<int:missile_id>/delete', methods=['GET', 'POST'])
+@app.route('/country/<int:country_id>/missiles/<int:missile_id>/delete',
+           methods=['GET', 'POST'])
+@login_required
 def deleteMissile(country_id, missile_id):
     '''Method to delete a missile'''
-    if 'username' not in session_object:
-        return redirect('/login')
     country = session.query(Country).filter_by(id=country_id).one()
     missileToDelete = session.query(Missile).filter_by(id=missile_id).one()
     if missileToDelete.user_id != session_object['user_id']:
-        return """<script>(function() {alert("Access denied. Only creator can delete."); window.location.href = "/";})();</script>"""
+        return """<script>(function() {alert("Access denied. Only creator \
+        can delete."); window.location.href = "/";})();</script>"""
     if request.method == 'POST':
         session.delete(missileToDelete)
         session.commit()
